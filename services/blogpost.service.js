@@ -28,49 +28,61 @@ const CreatePost = async ({ user, payload }) => {
   }
 };
 
-const GetAllPosts = async ({ author, title, tags, page = 1 }) => {
-  const filter = { state: "published" };
-  if (author) {
-    filter.author = author;
-  }
-  if (title) {
-    filter.title = title;
-  }
+const GetAllPosts = async ({
+  author,
+  title,
+  tags,
+  page = 1,
+  order_by = "createdAt",
+  order = "desc",
+  search
+}) => {
+  const filter = { state: "published" }; 
+  // Basic filters
+  if (author) filter.author = author;
+  if (title) filter.title = title;
   if (tags && Array.isArray(tags)) filter.tags = { $in: tags };
+
+  if (search) {
+    const searchRegex = new RegExp(search, "i");
+    filter.$or = [
+      { title: searchRegex },
+      { author: searchRegex },
+      { content: searchRegex }, 
+    ];
+  }
 
   const limit = 20;
   const skip = (page - 1) * limit;
 
+  // Allowed fields to sort by
+  const allowedSortFields = ["read_count", "reading_time", "createdAt"];
+  const sortField = allowedSortFields.includes(order_by) ? order_by : "createdAt";
+  const sortOrder = order === "asc" ? 1 : -1;
+
   try {
     const publishedblogs = await BlogPostModel.find(filter)
-      .sort({
-        createdAt: -1,
-      })
+      .sort({ [sortField]: sortOrder })
       .skip(skip)
       .limit(limit);
 
     const totalCount = await BlogPostModel.countDocuments(filter);
     const totalPages = Math.ceil(totalCount / limit);
 
-    if (!publishedblogs || publishedblogs.length === 0) {
-      return {
-        status: 404,
-        success: false,
-        message: "No published blogs found",
-        data: [],
-      };
-    }
     return {
       status: 200,
       success: true,
       message: "Posts retrieved successfully",
       data: publishedblogs,
-        pagination: {
-            totalCount,
-            totalPages,
-            currentPage: page,
-            limit,
-        },
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+      },
+      sorting: {
+        order_by: sortField,
+        order: sortOrder === 1 ? "asc" : "desc",
+      },
     };
   } catch (error) {
     return {
@@ -81,6 +93,61 @@ const GetAllPosts = async ({ author, title, tags, page = 1 }) => {
     };
   }
 };
+
+
+// const GetAllPosts = async ({ author, title, tags, page = 1 }) => {
+//   const filter = { state: "published" };
+//   if (author) {
+//     filter.author = author;
+//   }
+//   if (title) {
+//     filter.title = title;
+//   }
+//   if (tags && Array.isArray(tags)) filter.tags = { $in: tags };
+
+//   const limit = 20;
+//   const skip = (page - 1) * limit;
+
+//   try {
+//     const publishedblogs = await BlogPostModel.find(filter)
+//       .sort({
+//         createdAt: -1,
+//       })
+//       .skip(skip)
+//       .limit(limit);
+
+//     const totalCount = await BlogPostModel.countDocuments(filter);
+//     const totalPages = Math.ceil(totalCount / limit);
+
+//     if (!publishedblogs || publishedblogs.length === 0) {
+//       return {
+//         status: 404,
+//         success: false,
+//         message: "No published blogs found",
+//         data: [],
+//       };
+//     }
+//     return {
+//       status: 200,
+//       success: true,
+//       message: "Posts retrieved successfully",
+//       data: publishedblogs,
+//         pagination: {
+//             totalCount,
+//             totalPages,
+//             currentPage: page,
+//             limit,
+//         },
+//     };
+//   } catch (error) {
+//     return {
+//       status: 500,
+//       success: false,
+//       message: "Internal server error",
+//       error: error.message,
+//     };
+//   }
+// };
 
 const GetABlogPost = async (id) => {
   console.log(id);
