@@ -4,6 +4,8 @@ const mongoosePaginate = require("mongoose-paginate-v2");
 
 const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 10);
 
+const { estimateReadingTime } = require("../services/readingTimeCalculator");
+
 const BlogpostSchema = new mongoose.Schema(
   {
     _id: {
@@ -25,6 +27,11 @@ const BlogpostSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    authorId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     author: {
       type: String,
       required: true,
@@ -43,6 +50,7 @@ const BlogpostSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+        default: "0 min",
     },
     body: {
       type: String,
@@ -54,6 +62,15 @@ const BlogpostSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+BlogpostSchema.pre("save", function (next) {
+  // 'this' refers to the document being saved
+  // Only recalculate if the document is new OR if the 'body' field has been modified
+  if (this.isNew || this.isModified("body")) {
+    this.readingTime = estimateReadingTime(this.body);
+  }
+  next();
+});
 
 BlogpostSchema.plugin(mongoosePaginate);
 
