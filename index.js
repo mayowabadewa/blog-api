@@ -1,6 +1,7 @@
 const express = require("express");
 require("dotenv").config();
 const userRoute = require("./Routes/user.route");
+const blogPostRoute = require("./Routes/blogpost.route");
 const { connectDB } = require("./database");
 
 PORT = process.env.PORT;
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/users", userRoute);
+app.use("/api/v1/blogposts", blogPostRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is running on localhost:${PORT}`);

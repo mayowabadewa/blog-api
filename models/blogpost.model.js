@@ -1,14 +1,14 @@
 const mongoose = require("mongoose");
-import { nanoid, customAlphabet } from "nanoid";
-const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 10);
-constmongoosePaginate = require("mongoose-paginate-v2");
+const { customAlphabet } = require("nanoid");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
-const blogpostShema = new mongoose.Schema(
+const nanoid = customAlphabet("1234567890abcdefghijklmnopqrstuvwxyz", 10);
+
+const BlogpostSchema = new mongoose.Schema(
   {
     _id: {
       type: String,
       default: () => nanoid(),
-      user_id: String,
     },
     title: {
       type: String,
@@ -52,11 +52,10 @@ const blogpostShema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    _id: false,
   }
 );
 
-blogpostShema.plugin(mongoosePaginate);
+BlogpostSchema.plugin(mongoosePaginate);
 
-const BlogPostModel = mongoose.model("BlogPost", blogpostShema);
+const BlogPostModel = mongoose.model("BlogPostModel", BlogpostSchema);
 module.exports = BlogPostModel;
