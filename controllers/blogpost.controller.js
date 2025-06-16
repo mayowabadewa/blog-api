@@ -41,8 +41,35 @@ const GetABlogPost = async (req, res) => {
   }
 };
 
+const GetOwnBlogPosts = async (req, res) => {
+  const userId = req.user._id;
+  try {
+
+    const response = await BlogPostService.GetOwnBlogPosts({
+      page: parseInt(page, 20),
+      userId,
+    });
+    res.status(response.status).json({ response });
+  } catch (error) {
+    console.error("Error retrieving own blog posts:", error);
+  }
+}
+
+const DeletePost = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const userId = req.user._id; // Assuming user ID is available in req.user
+    const response = await BlogPostService.DeletePost(postId, userId);
+    res.status(response.status).json({ response });
+  } catch (error) {
+    console.error("Error deleting blog post:", error);
+  }
+}
+
 module.exports = {
   CreatePost,
   GetAllPosts,
   GetABlogPost,
+  DeletePost,
+  GetOwnBlogPosts
 };

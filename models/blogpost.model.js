@@ -16,6 +16,7 @@ const BlogpostSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      uniquie: true,
     },
     description: {
       type: String,
@@ -74,5 +75,5 @@ BlogpostSchema.pre("save", function (next) {
 
 BlogpostSchema.plugin(mongoosePaginate);
 
-const BlogPostModel = mongoose.model("BlogPostModel", BlogpostSchema);
+const BlogPostModel = mongoose.model("blogs", BlogpostSchema);
 module.exports = BlogPostModel;

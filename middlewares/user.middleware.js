@@ -25,7 +25,6 @@ const AuthorizeUser = async (req, res, next) => {
     const user = await User.findById(decoded.id);
     req.user = user;
     next();
-    console.log(user);
   } catch (error) {
     return res.status(401).json({
       message: "Authorization failed",

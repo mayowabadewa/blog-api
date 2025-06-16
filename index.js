@@ -14,10 +14,7 @@ connectDB();
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "Welcome to blog api",
-    success: true,
-  });
+  res.status(200).send("Welcome to the Blog API");
 });
 
 app.use("/api/v1/users", userRoute);

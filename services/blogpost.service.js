@@ -1,5 +1,6 @@
 const BlogPostModel = require("../models/blogpost.model");
 
+
 const CreatePost = async ({ user, payload }) => {
   try {
     const post = await BlogPostModel.create({
@@ -186,8 +187,94 @@ const GetABlogPost = async (id) => {
   }
 };
 
+const DeletePost = async(postId, userId) => {
+  console.log("Deleting post with ID:", postId, "by user ID:", userId);
+  try {
+    const post = await BlogPostModel.findById(postId);
+    if (!post) {
+      return {
+        status: 404,
+        success: false,
+        message: "Post not found",
+      };
+    }
+
+    if (post.authorId !== userId) {
+      return {
+        status: 403,
+        success: false,
+        message: "You are not authorized to delete this post",
+      };
+    }
+
+    await BlogPostModel.deleteOne({ _id: postId });
+    return {
+      status: 200,
+      success: true,
+      message: "Post deleted successfully",
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    };
+  }
+}
+
+const GetOwnBlogPosts = async ({userId
+}) => {
+  const filter = {
+   authorId: userId, 
+  };
+
+  const limit = 20;
+  const skip = (page - 1) * limit;
+
+  // Allowed fields to sort by
+  const allowedSortFields = ["read_count", "reading_time", "createdAt"];
+  const sortField = allowedSortFields.includes(order_by) ? order_by : "createdAt";
+  const sortOrder = order === "asc" ? 1 : -1;
+
+  try {
+    const publishedblogs = await BlogPostModel.find(filter)
+      .sort({ [sortField]: sortOrder })
+      .skip(skip)
+      .limit(limit);
+
+    const totalCount = await BlogPostModel.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      status: 200,
+      success: true,
+      message: "Posts retrieved successfully",
+      data: publishedblogs,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+      },
+      sorting: {
+        order_by: sortField,
+        order: sortOrder === 1 ? "asc" : "desc",
+      },
+    };
+  } catch (error) {
+    return {
+      status: 500,
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    };
+  }
+};
+
 module.exports = {
   CreatePost,
   GetAllPosts,
   GetABlogPost,
+  DeletePost,
+  GetOwnBlogPosts
 };
