@@ -1,5 +1,6 @@
 const express = require('express');
 const Router = express.Router();
+const { validateCreatePost, validateUpdatePost } = require('../middlewares/blogpost.middleware');
 
 const PostController = require('../controllers/blogpost.controller');
 
@@ -13,9 +14,9 @@ Router.get("/myblogs",userMiddleware.AuthorizeUser, PostController.GetOwnBlogPos
 Router.get('/:id', PostController.GetABlogPost); // Route for getting a specific blog post by ID
 Router.use(userMiddleware.AuthorizeUser);
 
-Router.post('/', PostController.CreatePost); //  Route for creating a new post
+Router.post('/',validateCreatePost ,PostController.CreatePost); //  Route for creating a new post
 
-Router.put('/:id', PostController.UpdatePost); // Route for updating a post
+Router.put('/:id', validateUpdatePost, PostController.UpdatePost); // Route for updating a post
 Router.delete('/:id', PostController.DeletePost); // Route for deleting a post
 
 module.exports = Router;
