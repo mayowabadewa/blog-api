@@ -223,53 +223,71 @@ const DeletePost = async(postId, userId) => {
   }
 }
 
-const GetOwnBlogPosts = async ({userId
-}) => {
-  const filter = {
-   authorId: userId, 
-  };
+// const GetOwnBlogPosts = async ({userId
+// }) => {
+//   const filter = {
+//    authorId: userId, 
+//   };
 
-  const limit = 20;
+//   const limit = 20;
+//   const skip = (page - 1) * limit;
+
+//   // Allowed fields to sort by
+//   const allowedSortFields = ["read_count", "reading_time", "createdAt"];
+//   const sortField = allowedSortFields.includes(order_by) ? order_by : "createdAt";
+//   const sortOrder = order === "asc" ? 1 : -1;
+
+//   try {
+//     const publishedblogs = await BlogPostModel.find(filter)
+//       .sort({ [sortField]: sortOrder })
+//       .skip(skip)
+//       .limit(limit);
+
+//     const totalCount = await BlogPostModel.countDocuments(filter);
+//     const totalPages = Math.ceil(totalCount / limit);
+
+//     return {
+//       status: 200,
+//       success: true,
+//       message: "Posts retrieved successfully",
+//       data: publishedblogs,
+//       pagination: {
+//         currentPage: page,
+//         totalPages,
+//         totalCount,
+//       },
+//       sorting: {
+//         order_by: sortField,
+//         order: sortOrder === 1 ? "asc" : "desc",
+//       },
+//     };
+//   } catch (error) {
+//     return {
+//       status: 500,
+//       success: false,
+//       message: "Internal server error",
+//       error: error.message,
+//     };
+//   }
+// };
+
+const GetOwnBlogPosts = async (userId, state, page, limit) => {
+  const filter = { authorId: userId };
+
+  if (state === "published" || state === "draft") {
+    filter.state = state;
+  }
+
   const skip = (page - 1) * limit;
 
-  // Allowed fields to sort by
-  const allowedSortFields = ["read_count", "reading_time", "createdAt"];
-  const sortField = allowedSortFields.includes(order_by) ? order_by : "createdAt";
-  const sortOrder = order === "asc" ? 1 : -1;
+  const [blogs, totalCount] = await Promise.all([
+    BlogPostModel.find(filter).skip(skip).limit(limit).exec(),
+    BlogPostModel.countDocuments(filter).exec(),
+  ]);
 
-  try {
-    const publishedblogs = await BlogPostModel.find(filter)
-      .sort({ [sortField]: sortOrder })
-      .skip(skip)
-      .limit(limit);
-
-    const totalCount = await BlogPostModel.countDocuments(filter);
-    const totalPages = Math.ceil(totalCount / limit);
-
-    return {
-      status: 200,
-      success: true,
-      message: "Posts retrieved successfully",
-      data: publishedblogs,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalCount,
-      },
-      sorting: {
-        order_by: sortField,
-        order: sortOrder === 1 ? "asc" : "desc",
-      },
-    };
-  } catch (error) {
-    return {
-      status: 500,
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-    };
-  }
+  return { blogs, totalCount };
 };
+
 
 module.exports = {
   CreatePost,
