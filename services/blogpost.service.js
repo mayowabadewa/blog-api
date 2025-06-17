@@ -288,11 +288,80 @@ const GetOwnBlogPosts = async (userId, state, page, limit) => {
   return { blogs, totalCount };
 };
 
+const UpdatePost = async (postId, userId, updateData) => {
+  try {
+    const post = await BlogPostModel.findById(postId);
+
+    if (!post) {
+      return {
+        status: 404,
+        success: false,
+        message: "Post not found",
+      };
+    }
+
+    if (post.authorId !== userId) {
+      return {
+        status: 403, // Forbidden
+        success: false,
+        message: "You are not authorized to update this post",
+      };
+    }
+
+    // Fields that can be updated
+    const allowedUpdates = ["title", "description", "tags", "body", "state"];
+    let hasChanges = false;
+
+    for (const key of allowedUpdates) {
+      if (updateData.hasOwnProperty(key) && post[key] !== updateData[key]) {
+        post[key] = updateData[key];
+        hasChanges = true;
+      }
+    }
+
+    if (!hasChanges) {
+        return {
+            status: 200,
+            success: true,
+            message: "No changes detected to update.",
+            data: post
+        };
+    }
+
+    // The pre-save hook on the model will recalculate readingTime if 'body' is changed.
+    // It will also validate 'state' against the enum.
+    const updatedPost = await post.save();
+
+    return {
+      status: 200,
+      success: true,
+      message: "Post updated successfully",
+      data: updatedPost,
+    };
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+        return {
+            status: 400,
+            success: false,
+            message: "Validation Error: " + error.message,
+            error: error.errors
+        };
+    }
+    return {
+      status: 500,
+      success: false,
+      message: "Internal server error while updating post",
+      error: error.message,
+    };
+  }
+};
+
 
 module.exports = {
   CreatePost,
   GetAllPosts,
   GetABlogPost,
   DeletePost,
-  GetOwnBlogPosts
+  GetOwnBlogPosts,
+  UpdatePost
 };

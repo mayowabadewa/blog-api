@@ -27,7 +27,7 @@ const GetAllPosts = async (req, res) => {
     author,
     title,
     tags: tagsArray,
-    page: parseInt(page, 20),
+    page: parseInt(page, 10) || 1, // Default to page 1 if not provided or invalid
   });
   res.status(response.status).json({ response });
 };
@@ -63,8 +63,8 @@ const GetOwnBlogPosts = asyncHandler(async (req, res) => {
   console.log(req.query.state, req.query.page, req.query.limit)
   console.log("User ID:", userId);
 
-  const pageNumber = parseInt(page, 20);
-  const pageSize = parseInt(limit, 20);
+  const pageNumber = parseInt(page, 10) || 1; // Default to page 1
+  const pageSize = parseInt(limit, 10) || 20; // Default to limit 20
 
   try {
     const { blogs, totalCount } = await BlogPostService.GetOwnBlogPosts(
@@ -103,10 +103,22 @@ const DeletePost = async (req, res) => {
   }
 }
 
+const UpdatePost = asyncHandler(async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user._id;
+  const payload = req.body;
+
+  const response = await BlogPostService.UpdatePost(postId, userId, payload);
+
+  // The service returns a comprehensive response object including status
+  res.status(response.status).json(response);
+});
+
 module.exports = {
   CreatePost,
   GetAllPosts,
   GetABlogPost,
   DeletePost,
-  GetOwnBlogPosts
+  GetOwnBlogPosts,
+  UpdatePost
 };
